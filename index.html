@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitor Água Fácil — Protótipo</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --azul: #0A4F7A;
+    --azul-claro: #1A8FBF;
+    --ciano: #00C9E0;
+    --verde: #00B894;
+    --amarelo: #F6C90E;
+    --laranja: #FF7043;
+    --branco: #F0F8FF;
+    --cinza: #6B8899;
+    --fundo: #041C2C;
+    --fundo2: #072233;
+    --card: rgba(255,255,255,0.05);
+    --border: rgba(0,201,224,0.2);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--fundo);
+    color: var(--branco);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ---- SCREENS ---- */
+  .screen { display: none; min-height: 100vh; flex-direction: column; animation: fadeIn 0.4s ease; }
+  .screen.active { display: flex; }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: translateY(0); } }
+
+  /* ---- NAV BAR ---- */
+  .nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 24px;
+    background: rgba(4,28,44,0.95);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .nav-logo { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; color: var(--ciano); letter-spacing: 0.5px; }
+  .nav-logo span { color: var(--branco); }
+  .nav-back { background: none; border: none; color: var(--ciano); cursor: pointer; font-size: 22px; padding: 4px 8px; border-radius: 8px; transition: background 0.2s; }
+  .nav-back:hover { background: var(--border); }
+  .nav-points { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: var(--amarelo); background: rgba(246,201,14,0.12); padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(246,201,14,0.3); }
+
+  /* ---- SPLASH ---- */
+  #splash {
+    align-items: center; justify-content: center; text-align: center;
+    background: radial-gradient(ellipse at 50% 30%, #0A4F7A 0%, #041C2C 65%);
+    position: relative; overflow: hidden;
+  }
+  .splash-bg {
+    position: absolute; width: 600px; height: 600px;
+    border-radius: 50%; border: 1px solid rgba(0,201,224,0.1);
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+    animation: pulse 4s ease-in-out infinite;
+  }
+  .splash-bg:nth-child(2) { width: 400px; height: 400px; border-color: rgba(0,201,224,0.15); animation-delay: 1s; }
+  .splash-bg:nth-child(3) { width: 220px; height: 220px; border-color: rgba(0,201,224,0.25); animation-delay: 2s; }
+  @keyframes pulse { 0%,100% { transform: translate(-50%,-50%) scale(1); opacity:0.5; } 50% { transform: translate(-50%,-50%) scale(1.05); opacity:1; } }
+
+  .splash-content { position: relative; z-index: 2; padding: 40px 32px; }
+  .splash-icon { font-size: 72px; margin-bottom: 8px; filter: drop-shadow(0 0 30px rgba(0,201,224,0.5)); }
+  .splash-tag { font-size: 11px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; color: var(--ciano); margin-bottom: 16px; opacity: 0.8; }
+  .splash-title { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; line-height: 1.1; margin-bottom: 12px; }
+  .splash-title span { color: var(--ciano); }
+  .splash-sub { color: rgba(240,248,255,0.6); font-size: 15px; line-height: 1.6; max-width: 300px; margin: 0 auto 36px; }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--azul-claro), var(--ciano));
+    color: var(--fundo); border: none; padding: 16px 40px;
+    border-radius: 50px; font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700;
+    cursor: pointer; transition: all 0.3s; box-shadow: 0 8px 30px rgba(0,201,224,0.3);
+    width: 100%; max-width: 300px;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,201,224,0.45); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .splash-login { margin-top: 18px; font-size: 13px; color: var(--cinza); }
+  .splash-login a { color: var(--ciano); cursor: pointer; text-decoration: underline; }
+
+  /* ---- HOME ---- */
+  #home { background: var(--fundo); }
+  .home-header { padding: 28px 24px 0; }
+  .greeting { font-size: 13px; color: var(--cinza); margin-bottom: 4px; }
+  .greeting strong { color: var(--branco); font-weight: 500; }
+  .home-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; margin-bottom: 24px; }
+
+  /* XP Bar */
+  .xp-card {
+    margin: 0 24px 24px;
+    background: linear-gradient(135deg, #0A3D5C, #0A4F7A);
+    border-radius: 20px; padding: 20px;
+    border: 1px solid rgba(0,201,224,0.2);
+    position: relative; overflow: hidden;
+  }
+  .xp-card::after { content:''; position:absolute; width:200px; height:200px; background: radial-gradient(circle, rgba(0,201,224,0.08), transparent); top:-50px; right:-50px; border-radius:50%; }
+  .xp-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .xp-level { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: var(--ciano); background: rgba(0,201,224,0.15); padding: 4px 12px; border-radius: 20px; }
+  .xp-pts { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; }
+  .xp-pts span { font-size: 13px; font-weight: 400; color: var(--cinza); }
+  .xp-bar-bg { background: rgba(255,255,255,0.1); border-radius: 10px; height: 8px; }
+  .xp-bar-fill { background: linear-gradient(90deg, var(--ciano), var(--verde)); border-radius: 10px; height: 8px; width: 62%; transition: width 1s ease; }
+  .xp-bar-label { font-size: 11px; color: var(--cinza); margin-top: 6px; }
+
+  /* Missao do dia */
+  .section-label { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--cinza); padding: 0 24px; margin-bottom: 12px; }
+  .missao-card {
+    margin: 0 24px 24px;
+    background: linear-gradient(135deg, rgba(0,184,148,0.15), rgba(0,201,224,0.1));
+    border: 1px solid rgba(0,184,148,0.3);
+    border-radius: 20px; padding: 20px; cursor: pointer;
+    transition: all 0.3s; display: flex; align-items: center; gap: 16px;
+  }
+  .missao-card:hover { transform: translateX(4px); border-color: rgba(0,184,148,0.6); }
+  .missao-icon { font-size: 36px; flex-shrink: 0; }
+  .missao-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .missao-desc { font-size: 13px; color: rgba(240,248,255,0.6); line-height: 1.4; }
+  .missao-xp { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; color: var(--amarelo); margin-top: 8px; }
+  .missao-arrow { margin-left: auto; font-size: 20px; color: var(--verde); flex-shrink: 0; }
+
+  /* Modulos */
+  .modulos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 24px 24px; }
+  .modulo-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 20px; padding: 20px; cursor: pointer;
+    transition: all 0.3s; position: relative; overflow: hidden;
+  }
+  .modulo-card:hover { transform: translateY(-3px); border-color: rgba(0,201,224,0.4); }
+  .modulo-card.locked { opacity: 0.5; cursor: not-allowed; }
+  .modulo-card.locked:hover { transform: none; }
+  .modulo-emoji { font-size: 30px; margin-bottom: 10px; }
+  .modulo-name { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; line-height: 1.3; margin-bottom: 6px; }
+  .modulo-prog { display: flex; align-items: center; gap: 6px; }
+  .modulo-prog-bar { flex: 1; background: rgba(255,255,255,0.1); border-radius: 4px; height: 4px; }
+  .modulo-prog-fill { height: 4px; border-radius: 4px; }
+  .m1 .modulo-prog-fill { background: var(--ciano); width: 60%; }
+  .m2 .modulo-prog-fill { background: var(--verde); width: 20%; }
+  .m3 .modulo-prog-fill { background: var(--amarelo); width: 0%; }
+  .m4 .modulo-prog-fill { background: var(--laranja); width: 0%; }
+  .modulo-prog-txt { font-size: 10px; color: var(--cinza); }
+  .lock-icon { position: absolute; top: 14px; right: 14px; font-size: 16px; }
+
+  /* Mapa botao */
+  .mapa-btn {
+    margin: 0 24px 24px;
+    background: linear-gradient(135deg, rgba(246,201,14,0.1), rgba(255,112,67,0.1));
+    border: 1px solid rgba(246,201,14,0.3);
+    border-radius: 20px; padding: 18px 20px; cursor: pointer;
+    transition: all 0.3s; display: flex; align-items: center; gap: 14px;
+  }
+  .mapa-btn:hover { border-color: rgba(246,201,14,0.6); transform: translateY(-2px); }
+  .mapa-info { flex: 1; }
+  .mapa-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+  .mapa-sub { font-size: 12px; color: var(--cinza); }
+
+  /* ---- BOTTOM NAV ---- */
+  .bottom-nav {
+    display: flex; background: rgba(4,28,44,0.98); border-top: 1px solid var(--border);
+    padding: 12px 0 20px; position: sticky; bottom: 0;
+  }
+  .bn-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; transition: all 0.2s; padding: 4px; }
+  .bn-item:hover .bn-icon { transform: translateY(-2px); }
+  .bn-icon { font-size: 22px; }
+  .bn-label { font-size: 10px; color: var(--cinza); font-weight: 500; }
+  .bn-item.active .bn-label { color: var(--ciano); }
+  .bn-item.active .bn-icon { filter: drop-shadow(0 0 6px var(--ciano)); }
+
+  /* ---- MODULO 1 SCREEN ---- */
+  #modulo1 { background: var(--fundo); }
+  .modulo-hero {
+    background: linear-gradient(180deg, #0A4F7A 0%, var(--fundo) 100%);
+    padding: 24px 24px 32px; text-align: center;
+  }
+  .modulo-hero-emoji { font-size: 56px; margin-bottom: 12px; }
+  .modulo-hero-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+  .modulo-hero-sub { font-size: 14px; color: rgba(240,248,255,0.6); line-height: 1.5; max-width: 280px; margin: 0 auto; }
+
+  .lecoes { padding: 0 24px 24px; }
+  .licao-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px; margin-bottom: 10px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; cursor: pointer; transition: all 0.3s;
+  }
+  .licao-item:hover { border-color: rgba(0,201,224,0.4); transform: translateX(4px); }
+  .licao-item.done { border-color: rgba(0,184,148,0.4); background: rgba(0,184,148,0.06); }
+  .licao-item.locked { opacity: 0.4; cursor: not-allowed; }
+  .licao-item.locked:hover { transform: none; border-color: var(--border); }
+  .licao-num { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px; flex-shrink: 0; }
+  .licao-num.done-num { background: var(--verde); color: white; }
+  .licao-num.active-num { background: linear-gradient(135deg, var(--azul-claro), var(--ciano)); color: white; }
+  .licao-num.lock-num { background: rgba(255,255,255,0.08); color: var(--cinza); }
+  .licao-info { flex: 1; }
+  .licao-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+  .licao-meta { font-size: 12px; color: var(--cinza); }
+  .licao-xp { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; color: var(--amarelo); }
+
+  /* ---- LICAO SCREEN ---- */
+  #licao { background: var(--fundo); }
+  .licao-progress-bar { height: 4px; background: rgba(255,255,255,0.1); }
+  .licao-progress-fill { height: 4px; background: linear-gradient(90deg, var(--ciano), var(--verde)); transition: width 0.5s ease; }
+  .licao-step { padding: 28px 24px; flex: 1; }
+  .step-counter { font-size: 12px; color: var(--cinza); margin-bottom: 16px; letter-spacing: 1px; }
+  .step-question { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.3; margin-bottom: 8px; }
+  .step-hint { font-size: 14px; color: rgba(240,248,255,0.5); margin-bottom: 28px; line-height: 1.5; }
+  .step-emoji-big { font-size: 64px; text-align: center; margin-bottom: 20px; animation: bounce 2s ease-in-out infinite; }
+  @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+  .opcoes { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+  .opcao {
+    background: var(--card); border: 2px solid var(--border);
+    border-radius: 16px; padding: 16px 18px; cursor: pointer;
+    transition: all 0.25s; display: flex; align-items: center; gap: 12px;
+  }
+  .opcao:hover { border-color: var(--ciano); background: rgba(0,201,224,0.08); }
+  .opcao.selected { border-color: var(--verde); background: rgba(0,184,148,0.12); }
+  .opcao.wrong { border-color: var(--laranja); background: rgba(255,112,67,0.1); }
+  .opcao-emoji { font-size: 24px; }
+  .opcao-text { font-size: 15px; font-weight: 500; }
+
+  .feedback-box { border-radius: 16px; padding: 16px 18px; margin-bottom: 16px; display: none; }
+  .feedback-box.show { display: flex; gap: 12px; align-items: flex-start; animation: fadeIn 0.3s ease; }
+  .feedback-box.correct { background: rgba(0,184,148,0.15); border: 1px solid rgba(0,184,148,0.4); }
+  .feedback-box.incorrect { background: rgba(255,112,67,0.12); border: 1px solid rgba(255,112,67,0.4); }
+  .feedback-icon { font-size: 22px; flex-shrink: 0; }
+  .feedback-text { font-size: 14px; line-height: 1.5; }
+  .feedback-text strong { display: block; font-family: 'Syne', sans-serif; margin-bottom: 4px; }
+
+  .btn-next {
+    background: linear-gradient(135deg, var(--azul-claro), var(--ciano));
+    color: var(--fundo); border: none; padding: 16px 32px;
+    border-radius: 50px; font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700;
+    cursor: pointer; width: 100%; transition: all 0.3s;
+    box-shadow: 0 6px 24px rgba(0,201,224,0.3); display: none;
+  }
+  .btn-next.show { display: block; animation: fadeIn 0.3s ease; }
+  .btn-next:hover { transform: translateY(-2px); }
+
+  /* ---- RESULTADO SCREEN ---- */
+  #resultado {
+    background: radial-gradient(ellipse at 50% 20%, #0A4F7A, var(--fundo) 70%);
+    align-items: center; justify-content: center; text-align: center; padding: 40px 24px;
+  }
+  .resultado-emoji { font-size: 80px; margin-bottom: 16px; animation: pop 0.5s cubic-bezier(0.175,0.885,0.32,1.275); }
+  @keyframes pop { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+  .resultado-title { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800; margin-bottom: 8px; }
+  .resultado-sub { font-size: 15px; color: rgba(240,248,255,0.6); margin-bottom: 32px; line-height: 1.5; }
+  .resultado-xp {
+    background: rgba(246,201,14,0.12); border: 1px solid rgba(246,201,14,0.3);
+    border-radius: 20px; padding: 20px 32px; margin-bottom: 32px; display: inline-block;
+  }
+  .resultado-xp-num { font-family: 'Syne', sans-serif; font-size: 42px; font-weight: 800; color: var(--amarelo); }
+  .resultado-xp-label { font-size: 13px; color: var(--cinza); }
+  .resultado-badges { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }
+  .badge {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 14px 18px; text-align: center; min-width: 90px;
+    animation: fadeIn 0.4s ease;
+  }
+  .badge-emoji { font-size: 28px; margin-bottom: 6px; }
+  .badge-name { font-size: 11px; color: var(--cinza); font-weight: 500; }
+
+  /* ---- MAPA SCREEN ---- */
+  #mapa { background: var(--fundo); }
+  .mapa-container { flex: 1; padding: 20px 24px; }
+  .mapa-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px; text-align: center; }
+  .stat-num { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--ciano); }
+  .stat-label { font-size: 11px; color: var(--cinza); margin-top: 2px; }
+
+  .mapa-visual {
+    background: linear-gradient(180deg, #0A3D5C 0%, #072233 100%);
+    border: 1px solid var(--border); border-radius: 20px; overflow: hidden;
+    height: 260px; position: relative; margin-bottom: 20px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mapa-placeholder { font-size: 13px; color: var(--cinza); text-align: center; z-index: 2; }
+  .mapa-placeholder .map-icon { font-size: 48px; margin-bottom: 12px; }
+  .mapa-dot { position: absolute; border-radius: 50%; animation: ping 2s ease-in-out infinite; }
+  .mapa-dot.d1 { width: 12px; height: 12px; background: var(--verde); top: 40%; left: 35%; box-shadow: 0 0 12px var(--verde); }
+  .mapa-dot.d2 { width: 10px; height: 10px; background: var(--ciano); top: 55%; left: 60%; box-shadow: 0 0 10px var(--ciano); animation-delay: 0.7s; }
+  .mapa-dot.d3 { width: 8px; height: 8px; background: var(--amarelo); top: 30%; left: 55%; box-shadow: 0 0 8px var(--amarelo); animation-delay: 1.4s; }
+  .mapa-dot.d4 { width: 14px; height: 14px; background: var(--laranja); top: 65%; left: 30%; box-shadow: 0 0 14px var(--laranja); animation-delay: 0.3s; }
+  @keyframes ping { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.6);opacity:0.6} }
+
+  .mapa-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--cinza); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  .registos-recentes h3 { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+  .registo-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 8px; }
+  .registo-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .registo-info { flex: 1; }
+  .registo-local { font-size: 13px; font-weight: 500; }
+  .registo-detalhe { font-size: 11px; color: var(--cinza); }
+  .registo-time { font-size: 11px; color: var(--cinza); }
+
+  /* ---- PERFIL SCREEN ---- */
+  #perfil { background: var(--fundo); }
+  .perfil-hero { background: linear-gradient(180deg, #0A4F7A 0%, var(--fundo) 100%); padding: 32px 24px 40px; text-align: center; }
+  .avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--azul-claro), var(--ciano)); display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 14px; border: 3px solid rgba(0,201,224,0.5); }
+  .perfil-name { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+  .perfil-nivel { font-size: 13px; color: var(--ciano); margin-bottom: 20px; }
+  .perfil-stats-row { display: flex; gap: 12px; justify-content: center; }
+  .p-stat { text-align: center; }
+  .p-stat-num { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; }
+  .p-stat-label { font-size: 11px; color: var(--cinza); }
+  .perfil-divider { width: 1px; background: var(--border); margin: 0 4px; }
+
+  .perfil-badges-section { padding: 20px 24px; }
+  .perfil-badges-section h3 { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--cinza); margin-bottom: 14px; }
+  .badges-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
+  .badge-item { text-align: center; padding: 12px 6px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; }
+  .badge-item.earned { border-color: rgba(0,201,224,0.3); background: rgba(0,201,224,0.06); }
+  .badge-item.not-earned { opacity: 0.3; filter: grayscale(1); }
+  .badge-item .bi-emoji { font-size: 26px; margin-bottom: 6px; }
+  .badge-item .bi-name { font-size: 10px; color: var(--cinza); line-height: 1.3; }
+
+  .sidqa-promo {
+    margin: 0 24px 24px;
+    background: linear-gradient(135deg, rgba(255,112,67,0.12), rgba(246,201,14,0.08));
+    border: 1px solid rgba(255,112,67,0.3);
+    border-radius: 20px; padding: 20px; cursor: pointer; transition: all 0.3s;
+  }
+  .sidqa-promo:hover { border-color: rgba(255,112,67,0.5); transform: translateY(-2px); }
+  .sidqa-top { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .sidqa-icon { font-size: 32px; }
+  .sidqa-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
+  .sidqa-sub { font-size: 13px; color: var(--cinza); line-height: 1.4; }
+  .sidqa-cta { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; color: var(--laranja); margin-top: 10px; }
+
+  /* Scrollable content */
+  .scroll-content { overflow-y: auto; flex: 1; }
+  .scroll-content::-webkit-scrollbar { width: 4px; }
+  .scroll-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* ---- TOAST ---- */
+  .toast {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: rgba(0,184,148,0.95); color: white; padding: 12px 24px; border-radius: 50px;
+    font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600;
+    opacity: 0; transition: all 0.4s; z-index: 999; white-space: nowrap;
+    backdrop-filter: blur(10px);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ======================== SPLASH ======================== -->
+<div class="screen active" id="splash">
+  <div class="splash-bg"></div>
+  <div class="splash-bg"></div>
+  <div class="splash-bg"></div>
+  <div class="splash-content">
+    <div class="splash-icon">💧</div>
+    <div class="splash-tag">Protótipo — SIDQA</div>
+    <h1 class="splash-title">Monitor<br><span>Água Fácil</span></h1>
+    <p class="splash-sub">Aprende a testar a qualidade da água da tua comunidade. Ganha pontos. Faz a diferença.</p>
+    <button class="btn-primary" onclick="goTo('home')">Começar Agora →</button>
+    <p class="splash-login">Já tens conta? <a onclick="goTo('home')">Entrar</a></p>
+  </div>
+</div>
+
+<!-- ======================== HOME ======================== -->
+<div class="screen" id="home">
+  <div class="scroll-content">
+    <div class="home-header">
+      <p class="greeting">Bom dia, <strong>Moçambicano! 👋</strong></p>
+      <h2 class="home-title">O que vamos aprender<br>hoje?</h2>
+    </div>
+
+    <!-- XP Card -->
+    <div class="xp-card">
+      <div class="xp-top">
+        <span class="xp-level" id="xpLevel">🌱 Observador</span>
+        <div>
+          <div class="xp-pts" id="xpPts">0 <span>XP</span></div>
+        </div>
+      </div>
+      <div class="xp-bar-bg"><div class="xp-bar-fill" id="xpBar" style="width:0%"></div></div>
+      <div class="xp-bar-label" id="xpLabel">100 XP para o próximo nível: Testador</div>
+    </div>
+
+    <!-- Missao -->
+    <div class="section-label">🎯 MISSÃO DO DIA</div>
+    <div class="missao-card" onclick="goTo('aprender')">
+      <div class="missao-icon">📖</div>
+      <div>
+        <div class="missao-title">Aprende os parâmetros organolépticos</div>
+        <div class="missao-desc">Descobre o que cor, turbidez, cheiro e partículas nos dizem sobre a água</div>
+        <div class="missao-xp">+50 XP ao completar</div>
+      </div>
+      <div class="missao-arrow">›</div>
+    </div>
+
+    <!-- Modulos -->
+    <div class="section-label">📚 MÓDULOS</div>
+    <div class="modulos-grid">
+      <div class="modulo-card m1" onclick="goTo('aprender')">
+        <div class="modulo-emoji">📖</div>
+        <div class="modulo-name">Parâmetros Organolépticos</div>
+        <div class="modulo-prog">
+          <div class="modulo-prog-bar"><div class="modulo-prog-fill" style="width:100%"></div></div>
+          <span class="modulo-prog-txt" style="color:var(--ciano)">✓ Lido</span>
+        </div>
+      </div>
+      <div class="modulo-card m1" onclick="goTo('modulo1')">
+        <div class="modulo-emoji">👁️</div>
+        <div class="modulo-name">Os Teus Sentidos</div>
+        <div class="modulo-prog">
+          <div class="modulo-prog-bar"><div class="modulo-prog-fill"></div></div>
+          <span class="modulo-prog-txt">3/5</span>
+        </div>
+      </div>
+      <div class="modulo-card m3" onclick="goTo('ambiente')" style="border-color:rgba(0,184,148,0.4);background:rgba(0,184,148,0.06);">
+        <div class="modulo-emoji">🌍</div>
+        <div class="modulo-name">O Ambiente da Água</div>
+        <div class="modulo-prog">
+          <div class="modulo-prog-bar"><div class="modulo-prog-fill" style="background:var(--verde);width:0%"></div></div>
+          <span class="modulo-prog-txt">0/4</span>
+        </div>
+      </div>
+      <div class="modulo-card m4" onclick="goTo('sidqa')" style="border-color:rgba(255,112,67,0.4);background:rgba(255,112,67,0.06);">
+        <div class="modulo-emoji">📊</div>
+        <div class="modulo-name">SIDQA Connect</div>
+        <div class="modulo-prog">
+          <div class="modulo-prog-bar"><div class="modulo-prog-fill" style="background:var(--laranja);width:100%"></div></div>
+          <span class="modulo-prog-txt" style="color:var(--laranja)">✓ Activo</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mapa -->
+    <div class="section-label">🗺️ MAPA COMUNITÁRIO</div>
+    <div class="mapa-btn" onclick="goTo('mapa')">
+      <div style="font-size:32px">🗺️</div>
+      <div class="mapa-info">
+        <div class="mapa-title">Ver testes na tua zona</div>
+        <div class="mapa-sub">47 registos em Moçambique esta semana</div>
+      </div>
+      <div style="color:var(--amarelo);font-size:20px">›</div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="bn-item active" onclick="goTo('home')"><div class="bn-icon">🏠</div><div class="bn-label">Início</div></div>
+    <div class="bn-item" onclick="goTo('aprender')"><div class="bn-icon">📚</div><div class="bn-label">Aprender</div></div>
+    <div class="bn-item" onclick="goTo('mapa')"><div class="bn-icon">🗺️</div><div class="bn-label">Mapa</div></div>
+    <div class="bn-item" onclick="goTo('sidqa')"><div class="bn-icon">📊</div><div class="bn-label">SIDQA</div></div>
+    <div class="bn-item" onclick="goTo('perfil')"><div class="bn-icon">👤</div><div class="bn-label">Perfil</div></div>
+  </div>
+</div>
+
+<!-- ======================== APRENDER ======================== -->
+<div class="screen" id="aprender">
+  <div class="nav">
+    <button class="nav-back" onclick="goTo('home')">←</button>
+    <div class="nav-logo">Monitor <span>Água Fácil</span></div>
+    <div class="nav-points">⭐ 620 XP</div>
+  </div>
+  <div class="scroll-content">
+    <div class="modulo-hero" style="background:linear-gradient(180deg,#0A4F7A 0%,var(--fundo) 100%)">
+      <div class="modulo-hero-emoji">📖</div>
+      <h2 class="modulo-hero-title">Parâmetros Organolépticos</h2>
+      <p class="modulo-hero-sub">O que são, o que significam e como nos ajudam a avaliar a qualidade da água — sem laboratório.</p>
+    </div>
+
+    <div style="padding:0 24px 32px;">
+
+      <!-- Intro -->
+      <div style="background:rgba(0,201,224,0.08);border:1px solid rgba(0,201,224,0.2);border-radius:16px;padding:18px;margin-bottom:20px;">
+        <p style="font-size:14px;color:rgba(240,248,255,0.75);line-height:1.7;margin:0;">Os parâmetros organolépticos são características da água que podem ser detectadas pelos nossos sentidos — visão, olfacto e paladar. São a base do diagnóstico SIDQA e o primeiro sinal de alerta sobre a qualidade da água que consumimos.</p>
+      </div>
+
+      <!-- COR -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+          <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#1A8FBF,#00C9E0);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">👁️</div>
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--ciano);">Cor</div>
+            <div style="font-size:12px;color:var(--cinza);">Parâmetro visual</div>
+          </div>
+        </div>
+        <p style="font-size:14px;color:rgba(240,248,255,0.8);line-height:1.7;margin-bottom:12px;">A cor da água é um dos primeiros indicadores de qualidade. Água de boa qualidade deve ser incolor ou ligeiramente azulada em grandes volumes. Alterações de cor indicam a presença de substâncias dissolvidas ou em suspensão.</p>
+        <div style="background:rgba(0,0,0,0.2);border-radius:12px;padding:14px;">
+          <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--ciano);margin-bottom:10px;letter-spacing:1px;">O QUE PODE INDICAR:</div>
+          <div style="font-size:13px;color:rgba(240,248,255,0.7);line-height:2;">
+            🟡 <strong style="color:white;">Amarelada/Acastanhada</strong> — presença de ferro, manganês ou matéria orgânica<br>
+            🟢 <strong style="color:white;">Esverdeada</strong> — presença de algas ou microrganismos<br>
+            ⚪ <strong style="color:white;">Esbranquiçada/Leitosa</strong> — ar dissolvido ou turbidez elevada<br>
+            ✅ <strong style="color:white;">Incolor</strong> — indicativo de boa qualidade visual
+          </div>
+        </div>
+      </div>
+
+      <!-- TURBIDEZ -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+          <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#F6C90E,#FF7043);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🌫️</div>
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--amarelo);">Turbidez</div>
+            <div style="font-size:12px;color:var(--cinza);">Partículas em suspensão</div>
+          </div>
+        </div>
+        <p style="font-size:14px;color:rgba(240,248,255,0.8);line-height:1.7;margin-bottom:12px;">A turbidez indica a presença de partículas sólidas em suspensão na água — sedimentos, argilas, microrganismos ou matéria orgânica. Água turva não é necessariamente perigosa, mas é um sinal de alerta que exige investigação.</p>
+        <div style="background:rgba(0,0,0,0.2);border-radius:12px;padding:14px;">
+          <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--amarelo);margin-bottom:10px;letter-spacing:1px;">COMO AVALIAR:</div>
+          <div style="font-size:13px;color:rgba(240,248,255,0.7);line-height:2;">
+            🔬 Enche um copo de vidro transparente com água<br>
+            🔦 Coloca-o contra uma fonte de luz<br>
+            👁️ Observa se consegues ver através da água com clareza<br>
+            ⚠️ Água turva pode proteger microrganismos do cloro residual
+          </div>
+        </div>
+      </div>
+
+      <!-- CHEIRO -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+          <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#00B894,#00C9E0);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">👃</div>
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--verde);">Cheiro</div>
+            <div style="font-size:12px;color:var(--cinza);">Odor — parâmetro olfactivo</div>
+          </div>
+        </div>
+        <p style="font-size:14px;color:rgba(240,248,255,0.8);line-height:1.7;margin-bottom:12px;">A água de boa qualidade deve ser inodora. A presença de odor é sempre um sinal de alerta e pode indicar contaminação química, biológica ou excesso de tratamento. O tipo de odor ajuda a identificar a causa.</p>
+        <div style="background:rgba(0,0,0,0.2);border-radius:12px;padding:14px;">
+          <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--verde);margin-bottom:10px;letter-spacing:1px;">TIPOS DE ODOR E CAUSAS:</div>
+          <div style="font-size:13px;color:rgba(240,248,255,0.7);line-height:2;">
+            🏊 <strong style="color:white;">Cheiro a piscina/cloro</strong> — excesso de cloro residual no tratamento<br>
+            🥚 <strong style="color:white;">Cheiro a ovo podre</strong> — presença de sulfureto de hidrogénio, bactérias<br>
+            🌿 <strong style="color:white;">Cheiro a terra/mofo</strong> — presença de algas ou matéria orgânica<br>
+            ⛽ <strong style="color:white;">Cheiro a combustível</strong> — contaminação por hidrocarbonetos, muito perigoso
+          </div>
+        </div>
+      </div>
+
+      <!-- PARTICULAS VISÍVEIS -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px;margin-bottom:24px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+          <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#FF7043,#F6C90E);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🔍</div>
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--laranja);">Partículas Visíveis</div>
+            <div style="font-size:12px;color:var(--cinza);">Sólidos em suspensão detectáveis a olho nu</div>
+          </div>
+        </div>
+        <p style="font-size:14px;color:rgba(240,248,255,0.8);line-height:1.7;margin-bottom:12px;">A presença de partículas visíveis a olho nu é um sinal directo de contaminação ou de problemas na canalização. Ao contrário da turbidez (partículas microscópicas), estas são detectáveis sem qualquer equipamento.</p>
+        <div style="background:rgba(0,0,0,0.2);border-radius:12px;padding:14px;">
+          <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--laranja);margin-bottom:10px;letter-spacing:1px;">O QUE PODES OBSERVAR:</div>
+          <div style="font-size:13px;color:rgba(240,248,255,0.7);line-height:2;">
+            🔴 <strong style="color:white;">Partículas avermelhadas/ferrugem</strong> — corrosão nas canalizações<br>
+            ⚫ <strong style="color:white;">Partículas escuras</strong> — sedimentos, carvão ou matéria orgânica<br>
+            🟤 <strong style="color:white;">Flocos acastanhados</strong> — precipitação de minerais como ferro e manganês<br>
+            ⚪ <strong style="color:white;">Partículas brancas</strong> — depósitos calcários ou carbonato de cálcio
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA para praticar -->
+      <div onclick="goTo('modulo1')" style="background:linear-gradient(135deg,rgba(0,201,224,0.15),rgba(0,184,148,0.1));border:1px solid rgba(0,201,224,0.3);border-radius:20px;padding:20px;cursor:pointer;display:flex;align-items:center;gap:16px;">
+        <div style="font-size:36px;">👁️</div>
+        <div style="flex:1;">
+          <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:4px;">Pronto para praticar?</div>
+          <div style="font-size:13px;color:rgba(240,248,255,0.6);">Vai para "Os Teus Sentidos" e testa o que aprendeste</div>
+          <div style="font-size:12px;font-weight:700;color:var(--verde);margin-top:6px;">+150 XP disponíveis</div>
+        </div>
+        <div style="color:var(--ciano);font-size:20px;">›</div>
+      </div>
+
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <div class="bn-item" onclick="goTo('home')"><div class="bn-icon">🏠</div><div class="bn-label">Início</div></div>
+    <div class="bn-item active"><div class="bn-icon">📚</div><div class="bn-label">Aprender</div></div>
+    <div class="bn-item" onclick="goTo('mapa')"><div class="bn-icon">🗺️</div><div class="bn-label">Mapa</div></div>
+    <div class="bn-item" onclick="goTo('sidqa')"><div class="bn-icon">📊</div><div class="bn-label">SIDQA</div></div>
+    <div class="bn-item" onclick="goTo('perfil')"><div class="bn-icon">👤</div><div class="bn-label">Perfil</div></div>
+  </div>
+</div>
+
+<!-- ======================== AMBIENTE ======================== -->
+<div class="screen" id="ambiente">
+  <div class="nav">
+    <button class="nav-back" onclick="goTo('home')">←</button>
+    <div class="nav-logo">Monitor <span>Água Fácil</span></div>
+    <div class="nav-points">⭐ 620 XP</div>
+  </div>
+  <div class="scroll-content">
+    <div class="modulo-hero" style="background:linear-gradient(180deg,#00856F 0%,var(--fundo) 100%)">
+      <div class="modulo-hero-emoji">🌍</div>
+      <h2 class="modulo-hero-title">O Ambiente da Água</h2>
+      <p class="modulo-hero-sub">O ponto de origem da água é tão importante quanto a própria água. Aprende a avaliar o ambiente onde a água é captada ou armazenada.</p>
+    </div>
+
+    <div style="padding:0 24px 32px;">
+
+      <div style="background:rgba(0,184,148,0.08);border:1px solid rgba(0,184,148,0.2);border-radius:16px;padding:18px;margin-bottom:20px;">
+        <p style="font-size:14px;color:rgba(240,248,255,0.75);line-height:1.7;margin:0;">A qualidade da água começa muito antes de chegar à torneira. O estado do ambiente onde a água é captada, armazenada ou transportada determina em grande parte o que vais encontrar no copo.</p>
+      </div>
+
+      <!-- FONTES E POÇOS -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+          <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#00B894,#0A4F7A);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">💧</div>
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--verde);">Fontes e Poços</div>
+            <div style="font-size:12px;color:var(--cinza);">Pontos de captação directa</div>
+          </div>
+        </div>
+        <p style="font-size:14px;color:rgba(240,248,255,0.8);line-height:1.7;margin-bottom:12px;">Fontes e poços são pontos de captação directa de água subterrânea. A sua localização e estado de conservação influenciam directamente a qualidade da água captada.</p>
+        <div style="background:rgba(0,0,0,0.2);border-radius:12px;padding:14px;">
+          <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--verde);margin-bottom:10px;letter-spacing:1px;">O QUE VERIFICAR:</div>
+          <div style="font-size:13px;color:rgba(240,248,255,0.7);line-height:2;">
+            📏 Distância mínima de 30m de fossas ou latinas<br>
+            🧱 Revestimento da boca do poço — protegido contra contaminação superficial<br>
+            🚫 Ausência de animais, resíduos ou vegetação excessiva em redor<br>
+            🔒 Tampa ou cobertura que impeça entrada de insectos e poeira
+          </div>
+        </div>
+      </div>
+
+      <!-- CHAFARIZES -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+          <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#1A8FBF,#00C9E0);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🚰</div>
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--ciano);">Chafarizes e Torneiras Públicas</div>
+            <div style="font-size:12px;color:var(--cinza);">Pontos de abastecimento colectivo</div>
+          </div>
+        </div>
+        <p style="font-size:14px;color:rgba(240,248,255,0.8);line-height:1.7;margin-bottom:12px;">Os chafarizes e torneiras públicas são pontos críticos porque servem muitas famílias. O seu estado de conservação e higiene afecta directamente a qualidade da água distribuída.</p>
+        <div style="background:rgba(0,0,0,0.2);border-radius:12px;padding:14px;">
+          <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--ciano);margin-bottom:10px;letter-spacing:1px;">SINAIS DE ALERTA:</div>
+          <div style="font-size:13px;color:rgba(240,248,255,0.7);line-height:2;">
+            ⚠️ Poças de água estagnada em redor — foco de contaminação<br>
+            🦟 Presença de mosquitos ou insectos — risco de vectores<br>
+            🟫 Ferrugem visível nas torneiras ou estrutura<br>
+            🚽 Proximidade a locais de saneamento deficiente
+          </div>
+        </div>
+      </div>
+
+      <!-- CANALIZAÇÕES -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+          <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#F6C90E,#FF7043);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🔧</div>
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--amarelo);">Canalizações e Armazenamento</div>
+            <div style="font-size:12px;color:var(--cinza);">Transporte e reservatórios</div>
+          </div>
+        </div>
+        <p style="font-size:14px;color:rgba(240,248,255,0.8);line-height:1.7;margin-bottom:12px;">Mesmo que a água na origem seja de boa qualidade, canalizações velhas ou reservatórios mal conservados podem contaminar a água antes de chegar ao consumidor.</p>
+        <div style="background:rgba(0,0,0,0.2);border-radius:12px;padding:14px;">
+          <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--amarelo);margin-bottom:10px;letter-spacing:1px;">O QUE OBSERVAR:</div>
+          <div style="font-size:13px;color:rgba(240,248,255,0.7);line-height:2;">
+            🔴 Ferrugem ou depósitos visíveis no interior dos reservatórios<br>
+            💧 Fugas nas canalizações — risco de entrada de contaminantes externos<br>
+            🧹 Limpeza periódica dos tanques domésticos — mínimo a cada 6 meses<br>
+            🚫 Nunca armazenar produtos químicos próximo dos reservatórios
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA SIDQA -->
+      <div onclick="goTo('sidqa')" style="background:linear-gradient(135deg,rgba(255,112,67,0.12),rgba(246,201,14,0.08));border:1px solid rgba(255,112,67,0.3);border-radius:20px;padding:20px;cursor:pointer;display:flex;align-items:center;gap:16px;">
+        <div style="font-size:36px;">📊</div>
+        <div style="flex:1;">
+          <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:4px;">Encontraste algo suspeito?</div>
+          <div style="font-size:13px;color:rgba(240,248,255,0.6);">Faz um diagnóstico completo com o SIDQA</div>
+          <div style="font-size:12px;font-weight:700;color:var(--laranja);margin-top:6px;">Relatório técnico por email — grátis</div>
+        </div>
+        <div style="color:var(--laranja);font-size:20px;">›</div>
+      </div>
+
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <div class="bn-item" onclick="goTo('home')"><div class="bn-icon">🏠</div><div class="bn-label">Início</div></div>
+    <div class="bn-item active"><div class="bn-icon">📚</div><div class="bn-label">Aprender</div></div>
+    <div class="bn-item" onclick="goTo('mapa')"><div class="bn-icon">🗺️</div><div class="bn-label">Mapa</div></div>
+    <div class="bn-item" onclick="goTo('sidqa')"><div class="bn-icon">📊</div><div class="bn-label">SIDQA</div></div>
+    <div class="bn-item" onclick="goTo('perfil')"><div class="bn-icon">👤</div><div class="bn-label">Perfil</div></div>
+  </div>
+</div>
+
+<!-- ======================== MODULO 1 ======================== -->
+<div class="screen" id="modulo1">
+  <div class="nav">
+    <button class="nav-back" onclick="goTo('home')">←</button>
+    <div class="nav-logo">Monitor <span>Água Fácil</span></div>
+    <div class="nav-points">⭐ 0 XP</div>
+  </div>
+  <div class="scroll-content">
+    <div class="modulo-hero">
+      <div class="modulo-hero-emoji">👁️</div>
+      <h2 class="modulo-hero-title">Os Teus Sentidos</h2>
+      <p class="modulo-hero-sub">Aprende a avaliar a qualidade da água usando visão, olfacto e paladar — sem nenhum equipamento.</p>
+    </div>
+    <div class="lecoes" id="listaLicoes">
+      <!-- Gerado dinamicamente pelo JS -->
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <div class="bn-item" onclick="goTo('home')"><div class="bn-icon">🏠</div><div class="bn-label">Início</div></div>
+    <div class="bn-item active"><div class="bn-icon">📚</div><div class="bn-label">Aprender</div></div>
+    <div class="bn-item" onclick="goTo('mapa')"><div class="bn-icon">🗺️</div><div class="bn-label">Mapa</div></div>
+    <div class="bn-item" onclick="goTo('perfil')"><div class="bn-icon">👤</div><div class="bn-label">Perfil</div></div>
+  </div>
+</div>
+
+<!-- ======================== LICAO ======================== -->
+<div class="screen" id="licao">
+  <div class="nav">
+    <button class="nav-back" onclick="goTo('modulo1')">←</button>
+    <div class="nav-logo" id="licaoNavTitle">Lição · Sentidos</div>
+    <div class="nav-points">⭐ 0 XP</div>
+  </div>
+  <div class="licao-progress-bar"><div class="licao-progress-fill" id="licaoBar" style="width:0%"></div></div>
+  <div class="licao-step" id="stepContainer"></div>
+</div>
+
+<!-- ======================== SIDQA SCREEN ======================== -->
+<div class="screen" id="sidqa" style="background:radial-gradient(ellipse at 50% 20%,#0A3D5C,#041C2C 70%);align-items:center;justify-content:center;text-align:center;padding:40px 24px;">
+  <div class="nav" style="position:absolute;top:0;left:0;right:0;">
+    <button class="nav-back" onclick="goTo('home')">←</button>
+    <div class="nav-logo">Monitor <span>Água Fácil</span></div>
+    <div class="nav-points">⭐ 620 XP</div>
+  </div>
+  <div style="position:relative;z-index:2;max-width:340px;margin-top:60px;">
+    <div style="font-size:72px;margin-bottom:16px;filter:drop-shadow(0 0 30px rgba(255,112,67,0.4));">📊</div>
+    <div style="font-size:11px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--laranja);background:rgba(255,112,67,0.12);padding:6px 16px;border-radius:20px;border:1px solid rgba(255,112,67,0.3);display:inline-block;margin-bottom:18px;">Nível Avançado Desbloqueado</div>
+    <h2 style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:white;margin-bottom:12px;line-height:1.2;">Análise Técnica<br><span style="color:var(--ciano);">SIDQA</span></h2>
+    <p style="font-size:14px;color:rgba(240,248,255,0.6);line-height:1.7;margin-bottom:24px;">Vai além dos sentidos. O SIDQA avalia os parâmetros organolépticos da tua amostra de água e envia um <strong style="color:white;">relatório técnico completo</strong> directamente para o teu email — gratuitamente.</p>
+    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:16px;margin-bottom:24px;text-align:left;">
+      <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--ciano);margin-bottom:12px;letter-spacing:1px;">O QUE VAIS PRECISAR:</div>
+      <div style="font-size:13px;color:rgba(240,248,255,0.7);line-height:2.1;">
+        💧 Uma amostra de água para analisar<br>
+        👁️ Observação da cor e turbidez<br>
+        👃 Avaliação do cheiro<br>
+        📧 O teu endereço de email<br>
+        ⏱️ Apenas 3 a 5 minutos
+      </div>
+    </div>
+    <button onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLSdSmH7ttDogp2Utt6cWnAO7xC9FdbNfOqITNqru1Fr8WEKyEA/viewform?usp=header','_blank')" style="background:linear-gradient(135deg,#FF7043,#F6C90E);color:#041C2C;border:none;padding:18px 40px;border-radius:50px;font-family:'Syne',sans-serif;font-size:16px;font-weight:800;cursor:pointer;width:100%;box-shadow:0 8px 30px rgba(255,112,67,0.4);margin-bottom:14px;">
+      Iniciar Análise SIDQA →
+    </button>
+    <button onclick="goTo('home')" style="background:none;border:none;color:var(--cinza);cursor:pointer;font-size:13px;padding:8px;">Voltar ao início</button>
+  </div>
+</div>
+
+<!-- ======================== RESULTADO ======================== -->
+<div class="screen" id="resultado">
+  <div class="resultado-emoji">🏆</div>
+  <h2 class="resultado-title" id="resultadoTitulo">Lição Completa!</h2>
+  <p class="resultado-sub">Excelente! O teu conhecimento sobre qualidade da água está a crescer. Continua assim!</p>
+  <div class="resultado-xp">
+    <div class="resultado-xp-num" id="resultadoXP">+0 XP</div>
+    <div class="resultado-xp-label">Pontos ganhos nesta sessão</div>
+  </div>
+  <button class="btn-primary" style="max-width:280px" onclick="goTo('modulo1')">Ver todas as Lições →</button>
+  <br><br>
+  <button onclick="goTo('home')" style="background:none;border:none;color:var(--cinza);cursor:pointer;font-size:14px;margin-top:8px">Voltar ao início</button>
+</div>
+
+<!-- ======================== MAPA ======================== -->
+<div class="screen" id="mapa">
+  <div class="nav">
+    <button class="nav-back" onclick="goTo('home')">←</button>
+    <div class="nav-logo">Mapa <span>Comunitário</span></div>
+    <div class="nav-points">⭐ 620 XP</div>
+  </div>
+  <div class="scroll-content">
+    <div class="mapa-container">
+      <div class="mapa-stats">
+        <div class="stat-card"><div class="stat-num">47</div><div class="stat-label">Testes esta semana</div></div>
+        <div class="stat-card"><div class="stat-num">12</div><div class="stat-label">Cidades</div></div>
+        <div class="stat-card"><div class="stat-num">89%</div><div class="stat-label">Qualidade boa</div></div>
+      </div>
+
+      <div class="mapa-visual">
+        <div class="mapa-dot d1"></div>
+        <div class="mapa-dot d2"></div>
+        <div class="mapa-dot d3"></div>
+        <div class="mapa-dot d4"></div>
+        <div class="mapa-placeholder">
+          <div class="map-icon">🗺️</div>
+          <div>Mapa de Moçambique<br><span style="font-size:11px;color:rgba(107,136,153,0.7)">Pontos = registos da comunidade</span></div>
+        </div>
+      </div>
+
+      <div class="mapa-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--verde)"></div>Boa qualidade</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--amarelo)"></div>Atenção</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--laranja)"></div>Má qualidade</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--ciano)"></div>Não testado</div>
+      </div>
+
+      <div class="registos-recentes">
+        <h3>Registos Recentes</h3>
+        <div class="registo-item">
+          <div class="registo-dot" style="background:var(--verde)"></div>
+          <div class="registo-info"><div class="registo-local">📍 Machava, Matola</div><div class="registo-detalhe">Cor normal · Sem cheiro · Boa qualidade</div></div>
+          <div class="registo-time">2h atrás</div>
+        </div>
+        <div class="registo-item">
+          <div class="registo-dot" style="background:var(--amarelo)"></div>
+          <div class="registo-info"><div class="registo-local">📍 Beira — Munhava</div><div class="registo-detalhe">Turbidez ligeira · Investigar</div></div>
+          <div class="registo-time">5h atrás</div>
+        </div>
+        <div class="registo-item">
+          <div class="registo-dot" style="background:var(--verde)"></div>
+          <div class="registo-info"><div class="registo-local">📍 Maputo — Alto Maé</div><div class="registo-detalhe">Parâmetros orgânicos OK</div></div>
+          <div class="registo-time">8h atrás</div>
+        </div>
+        <div class="registo-item">
+          <div class="registo-dot" style="background:var(--laranja)"></div>
+          <div class="registo-info"><div class="registo-local">📍 Nampula — Cidade</div><div class="registo-detalhe">Cor amarelada · Cheiro forte · SIDQA recomendado</div></div>
+          <div class="registo-time">12h atrás</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <div class="bn-item" onclick="goTo('home')"><div class="bn-icon">🏠</div><div class="bn-label">Início</div></div>
+    <div class="bn-item" onclick="goTo('modulo1')"><div class="bn-icon">📚</div><div class="bn-label">Aprender</div></div>
+    <div class="bn-item active"><div class="bn-icon">🗺️</div><div class="bn-label">Mapa</div></div>
+    <div class="bn-item" onclick="goTo('perfil')"><div class="bn-icon">👤</div><div class="bn-label">Perfil</div></div>
+  </div>
+</div>
+
+<!-- ======================== PERFIL ======================== -->
+<div class="screen" id="perfil">
+  <div class="nav">
+    <button class="nav-back" onclick="goTo('home')">←</button>
+    <div class="nav-logo">Monitor <span>Água Fácil</span></div>
+    <div class="nav-points">⭐ 620 XP</div>
+  </div>
+  <div class="scroll-content">
+    <div class="perfil-hero">
+      <div class="avatar">🧑‍🔬</div>
+      <div class="perfil-name">Explorador</div>
+      <div class="perfil-nivel" id="perfilNivel">🌱 Observador</div>
+      <div class="perfil-stats-row">
+        <div class="p-stat"><div class="p-stat-num" id="perfilTestes">0</div><div class="p-stat-label">Testes feitos</div></div>
+        <div class="perfil-divider"></div>
+        <div class="p-stat"><div class="p-stat-num" id="perfilXP">0</div><div class="p-stat-label">Pontos XP</div></div>
+        <div class="perfil-divider"></div>
+        <div class="p-stat"><div class="p-stat-num">—</div><div class="p-stat-label">Dias seguidos</div></div>
+      </div>
+    </div>
+
+    <div class="perfil-badges-section">
+      <h3>Os Meus Badges</h3>
+      <div class="badges-grid">
+        <div class="badge-item not-earned" id="badge-primeiro"><div class="bi-emoji">💧</div><div class="bi-name">1º Teste</div></div>
+        <div class="badge-item not-earned" id="badge-testador"><div class="bi-emoji">👁️</div><div class="bi-name">Testador</div></div>
+        <div class="badge-item not-earned" id="badge-monitor"><div class="bi-emoji">🌍</div><div class="bi-name">Monitor</div></div>
+        <div class="badge-item not-earned" id="badge-sidqa"><div class="bi-emoji">📊</div><div class="bi-name">SIDQA Pro</div></div>
+        <div class="badge-item not-earned"><div class="bi-emoji">🏆</div><div class="bi-name">Expert</div></div>
+        <div class="badge-item not-earned"><div class="bi-emoji">🔥</div><div class="bi-name">5 Dias</div></div>
+        <div class="badge-item not-earned"><div class="bi-emoji">👃</div><div class="bi-name">Detector</div></div>
+        <div class="badge-item not-earned"><div class="bi-emoji">🗺️</div><div class="bi-name">Mapeador</div></div>
+      </div>
+    </div>
+
+    <button onclick="resetXP()" style="background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);padding:10px 20px;border-radius:50px;font-size:12px;cursor:pointer;width:100%;margin-bottom:16px;">🔄 Recomeçar do zero</button>
+
+    <div class="sidqa-promo" onclick="goTo('sidqa')">
+      <div class="sidqa-top">
+        <div class="sidqa-icon">📊</div>
+        <div class="sidqa-title">SIDQA — Relatório Completo</div>
+      </div>
+      <div class="sidqa-sub">Vai além dos sentidos! O SIDQA avalia parâmetros organolépticos e envia um relatório técnico completo por email — gratuitamente.</div>
+      <div class="sidqa-cta">Aceder ao SIDQA →</div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <div class="bn-item" onclick="goTo('home')"><div class="bn-icon">🏠</div><div class="bn-label">Início</div></div>
+    <div class="bn-item" onclick="goTo('aprender')"><div class="bn-icon">📚</div><div class="bn-label">Aprender</div></div>
+    <div class="bn-item" onclick="goTo('mapa')"><div class="bn-icon">🗺️</div><div class="bn-label">Mapa</div></div>
+    <div class="bn-item active"><div class="bn-icon">👤</div><div class="bn-label">Perfil</div></div>
+  </div>
+</div>
+
+<script>
+// ================================================
+// SISTEMA DE XP DINÂMICO — localStorage
+// ================================================
+
+const NIVEIS = [
+  { min: 0,   max: 99,   label: '🌱 Observador',          next: 'Testador' },
+  { min: 100, max: 299,  label: '👁️ Testador',            next: 'Monitor Comunitário' },
+  { min: 300, max: 499,  label: '🌍 Monitor Comunitário', next: 'Especialista SIDQA' },
+  { min: 500, max: 9999, label: '📊 Especialista SIDQA',  next: null }
+];
+
+const XP_LICAO_CORRECTA = 30;
+const XP_LICAO_FINAL    = 50;
+const XP_APRENDER       = 20;
+const XP_AMBIENTE       = 20;
+
+function getXP()          { return parseInt(localStorage.getItem('maf_xp') || '0'); }
+function getLicoesFeitas(){ return JSON.parse(localStorage.getItem('maf_licoes') || '[]'); }
+function getAprenderLido(){ return localStorage.getItem('maf_aprender') === '1'; }
+function getAmbienteLido(){ return localStorage.getItem('maf_ambiente') === '1'; }
+
+function addXP(amount) {
+  const antes  = getXP();
+  const depois = antes + amount;
+  localStorage.setItem('maf_xp', depois);
+  if (getNivel(depois).label !== getNivel(antes).label)
+    setTimeout(() => showToast('🎉 Subiste de nível! ' + getNivel(depois).label), 600);
+  return depois;
+}
+
+function marcarLicao(id) {
+  const feitas = getLicoesFeitas();
+  if (!feitas.includes(id)) { feitas.push(id); localStorage.setItem('maf_licoes', JSON.stringify(feitas)); return true; }
+  return false;
+}
+
+function getNivel(xp)       { return NIVEIS.find(n => xp >= n.min && xp <= n.max) || NIVEIS[0]; }
+function getBarraPercent(xp){ const n = getNivel(xp); if (!n.next) return 100; return Math.min(100, Math.round(((xp - n.min) / (n.max - n.min + 1)) * 100)); }
+
+function updateAllXP() {
+  const xp    = getXP();
+  const nivel = getNivel(xp);
+  const pct   = getBarraPercent(xp);
+  const falta = nivel.next ? (nivel.max + 1 - xp) + ' XP para ' + nivel.next : 'Nível máximo atingido!';
+
+  document.querySelectorAll('.nav-points').forEach(el => el.textContent = '⭐ ' + xp + ' XP');
+
+  const ids = { xpLevel:'xpLevel', xpPts:'xpPts', xpBar:'xpBar', xpLabel:'xpLabel', perfilNivel:'perfilNivel', perfilXP:'perfilXP', perfilTestes:'perfilTestes' };
+  if (document.getElementById('xpLevel'))    document.getElementById('xpLevel').textContent    = nivel.label;
+  if (document.getElementById('xpPts'))      document.getElementById('xpPts').innerHTML        = xp + ' <span>XP</span>';
+  if (document.getElementById('xpBar'))      document.getElementById('xpBar').style.width      = pct + '%';
+  if (document.getElementById('xpLabel'))    document.getElementById('xpLabel').textContent    = falta;
+  if (document.getElementById('perfilNivel'))document.getElementById('perfilNivel').textContent= nivel.label;
+  if (document.getElementById('perfilXP'))   document.getElementById('perfilXP').textContent   = xp;
+  if (document.getElementById('perfilTestes'))document.getElementById('perfilTestes').textContent = getLicoesFeitas().length;
+
+  updateBadges(xp);
+  renderListaLicoes();
+}
+
+function updateBadges(xp) {
+  const feitas = getLicoesFeitas().length;
+  const b = (id, cond) => { const el = document.getElementById(id); if (el && cond) el.classList.remove('not-earned'); };
+  b('badge-primeiro', feitas >= 1);
+  b('badge-testador', xp >= 100);
+  b('badge-monitor',  xp >= 300);
+  b('badge-sidqa',    xp >= 500);
+}
+
+// ================================================
+// DEFINIÇÃO DAS 5 LIÇÕES COM PERGUNTAS PRÓPRIAS
+// ================================================
+
+const LICOES_DEF = [
+  {
+    id: 'licao_cor',
+    num: 1,
+    titulo: 'A cor da água',
+    meta: 'O que a cor nos diz sobre a qualidade',
+    xp: 30,
+    emoji: '🎨',
+    steps: [
+      {
+        prog: 33, question: 'Qual é a cor ideal da água potável?',
+        hint: 'Pensa na água que costumas beber em casa...', emoji: '💧',
+        opcoes: [
+          { emoji: '✅', text: 'Incolor (transparente)', correct: true },
+          { emoji: '🟡', text: 'Ligeiramente amarelada', correct: false },
+          { emoji: '🔵', text: 'Azul intensa', correct: false },
+        ],
+        feedbackOk:   { title: 'Correcto!', text: 'Água potável de qualidade deve ser incolor e transparente. Qualquer coloração é um sinal de alerta que requer investigação.' },
+        feedbackErro: { title: 'Atenção!', text: 'A água potável ideal é completamente incolor. Tonalidades amarelas, acastanhadas ou outras indicam presença de substâncias indesejadas.' }
+      },
+      {
+        prog: 66, question: 'Água com cor amarelada/acastanhada indica provavelmente:',
+        hint: 'Pensa nos metais que podem estar na canalização...', emoji: '🟡',
+        opcoes: [
+          { emoji: '🔩', text: 'Presença de ferro ou manganês', correct: true },
+          { emoji: '🌿', text: 'Presença de vitaminas naturais', correct: false },
+          { emoji: '☀️', text: 'Efeito da luz solar', correct: false },
+        ],
+        feedbackOk:   { title: 'Exactamente!', text: 'Cor amarelada ou acastanhada indica frequentemente ferro ou manganês em excesso, geralmente por corrosão nas canalizações.' },
+        feedbackErro: { title: 'Não desta vez!', text: 'A cor amarelada/acastanhada é causada por ferro ou manganês dissolvidos — metais que podem vir da corrosão de canalizações antigas.' }
+      },
+      {
+        prog: 100, question: 'O que deves fazer ao encontrar água com cor esverdeada?',
+        hint: 'Cor verde na água está associada a seres vivos...', emoji: '🟢',
+        opcoes: [
+          { emoji: '🚫', text: 'Não consumir e fazer análise com o SIDQA', correct: true },
+          { emoji: '🍃', text: 'Beber — é sinal de minerais saudáveis', correct: false },
+          { emoji: '⏳', text: 'Esperar que a cor desapareça', correct: false },
+        ],
+        feedbackOk:   { title: 'Perfeito!', text: 'Cor esverdeada indica presença de algas ou microrganismos. Não consumas esta água e usa o SIDQA para um diagnóstico completo.' },
+        feedbackErro: { title: 'Cuidado!', text: 'Água esverdeada nunca é segura para consumo directo. Indica algas ou microrganismos. Não consumas e analisa com o SIDQA.' }
+      }
+    ]
+  },
+  {
+    id: 'licao_turbidez',
+    num: 2,
+    titulo: 'Turbidez e partículas',
+    meta: 'Água turva — causa e perigo',
+    xp: 30,
+    emoji: '🌫️',
+    steps: [
+      {
+        prog: 33, question: 'O que é a turbidez da água?',
+        hint: 'Pensa no que impede ver através da água...', emoji: '🔍',
+        opcoes: [
+          { emoji: '✅', text: 'Presença de partículas em suspensão que reduzem a transparência', correct: true },
+          { emoji: '❌', text: 'A temperatura da água', correct: false },
+          { emoji: '❌', text: 'O sabor ácido da água', correct: false },
+        ],
+        feedbackOk:   { title: 'Correcto!', text: 'Turbidez é causada por partículas sólidas em suspensão — sedimentos, argilas, microrganismos ou matéria orgânica — que tornam a água opaca.' },
+        feedbackErro: { title: 'Não exactamente!', text: 'Turbidez refere-se à falta de transparência da água causada por partículas em suspensão, não à temperatura nem ao sabor.' }
+      },
+      {
+        prog: 66, question: 'Como avalias a turbidez sem equipamento?',
+        hint: 'O que tens em casa que é transparente?', emoji: '🥛',
+        opcoes: [
+          { emoji: '🚫', text: 'Não é possível sem laboratório', correct: false },
+          { emoji: '✅', text: 'Encher um copo de vidro e observar contra a luz', correct: true },
+          { emoji: '👃', text: 'Cheirando a água directamente', correct: false },
+        ],
+        feedbackOk:   { title: 'Muito bem!', text: 'Um copo de vidro transparente contra a luz é suficiente. Se não consegues ver claramente através da água, há turbidez significativa.' },
+        feedbackErro: { title: 'Podes fazer melhor!', text: 'Com um simples copo de vidro e uma fonte de luz já consegues avaliar a turbidez. A observação visual é o primeiro instrumento disponível.' }
+      },
+      {
+        prog: 100, question: 'Água muito turva pode ser perigosa porque:',
+        hint: 'O que se pode esconder nas partículas em suspensão?', emoji: '⚠️',
+        opcoes: [
+          { emoji: '🦠', text: 'As partículas podem proteger microrganismos do cloro', correct: true },
+          { emoji: '💊', text: 'Diminui a eficácia dos medicamentos', correct: false },
+          { emoji: '🌡️', text: 'Aquece mais rapidamente', correct: false },
+        ],
+        feedbackOk:   { title: 'Excelente!', text: 'Correctíssimo! Partículas em suspensão podem "esconder" bactérias e vírus, protegendo-os do cloro residual e tornando o tratamento ineficaz.' },
+        feedbackErro: { title: 'Quase!', text: 'O principal perigo é que as partículas em suspensão protegem microrganismos do cloro, podendo tornar o tratamento da água ineficaz.' }
+      }
+    ]
+  },
+  {
+    id: 'licao_cheiro',
+    num: 3,
+    titulo: 'O cheiro da água',
+    meta: 'Cloro, mofo e sinais de alerta',
+    xp: 30,
+    emoji: '👃',
+    steps: [
+      {
+        prog: 33, question: 'Água de boa qualidade deve ter:',
+        hint: 'Qual é o odor da água pura?', emoji: '💧',
+        opcoes: [
+          { emoji: '✅', text: 'Nenhum odor — ser inodora', correct: true },
+          { emoji: '🏊', text: 'Ligeiro cheiro a cloro', correct: false },
+          { emoji: '🌿', text: 'Cheiro fresco a natureza', correct: false },
+        ],
+        feedbackOk:   { title: 'Correcto!', text: 'Água potável de qualidade deve ser completamente inodora. Qualquer odor, mesmo suave, é um sinal de alerta.' },
+        feedbackErro: { title: 'Atenção!', text: 'Água potável ideal não tem nenhum cheiro. O odor a cloro, embora comum em água tratada, indica concentração acima do recomendado.' }
+      },
+      {
+        prog: 66, question: 'Cheiro a "ovo podre" na água indica:',
+        hint: 'Este cheiro é associado a um gás específico...', emoji: '🥚',
+        opcoes: [
+          { emoji: '🌊', text: 'Água do mar contaminada', correct: false },
+          { emoji: '🦠', text: 'Sulfureto de hidrogénio — presença de bactérias', correct: true },
+          { emoji: '🔩', text: 'Excesso de ferro nas canalizações', correct: false },
+        ],
+        feedbackOk:   { title: 'Exactamente!', text: 'Cheiro a ovo podre é causado por sulfureto de hidrogénio (H₂S), produzido por bactérias anaeróbias. Esta água não deve ser consumida.' },
+        feedbackErro: { title: 'Não desta vez!', text: 'Cheiro a ovo podre indica sulfureto de hidrogénio — um gás produzido por bactérias. É um sinal de contaminação biológica séria.' }
+      },
+      {
+        prog: 100, question: 'Cheiro a combustível ou químico na água exige:',
+        hint: 'Este é um dos sinais mais graves de contaminação...', emoji: '⛽',
+        opcoes: [
+          { emoji: '⏳', text: 'Deixar repousar até o cheiro desaparecer', correct: false },
+          { emoji: '🚨', text: 'Parar imediatamente o consumo e notificar autoridades', correct: true },
+          { emoji: '🔥', text: 'Ferver a água antes de beber', correct: false },
+        ],
+        feedbackOk:   { title: 'Perfeito!', text: 'Cheiro a combustível indica contaminação por hidrocarbonetos — muito perigoso. Para imediatamente o consumo e usa o SIDQA para documentar e reportar.' },
+        feedbackErro: { title: 'Cuidado!', text: 'Contaminação por combustível é gravíssima. Ferver não elimina hidrocarbonetos. Para o consumo imediatamente e notifica as autoridades.' }
+      }
+    ]
+  },
+  {
+    id: 'licao_sabor',
+    num: 4,
+    titulo: 'O sabor da água',
+    meta: 'Quando provar (e quando NÃO provar!)',
+    xp: 30,
+    emoji: '👅',
+    steps: [
+      {
+        prog: 33, question: 'Quando é seguro provar a água?',
+        hint: 'Pensa bem antes de colocar água desconhecida na boca...', emoji: '💧',
+        opcoes: [
+          { emoji: '✅', text: 'Apenas se a cor e o cheiro forem normais', correct: true },
+          { emoji: '❌', text: 'Sempre que tiver sede', correct: false },
+          { emoji: '❓', text: 'Só em água de garrafa selada', correct: false },
+        ],
+        feedbackOk:   { title: 'Correcto!', text: 'Antes de provar qualquer água, verifica sempre a cor e o cheiro. Água turva ou com odor nunca deve ser provada directamente.' },
+        feedbackErro: { title: 'Cuidado!', text: 'Provar água sem verificar primeiro pode ser perigoso. Avalia sempre a cor e o cheiro antes de qualquer contacto oral.' }
+      },
+      {
+        prog: 66, question: 'Que sabor indica excesso de cloro?',
+        hint: 'Pensa no cheiro das piscinas...', emoji: '🏊',
+        opcoes: [
+          { emoji: '😶', text: 'Sabor metálico', correct: false },
+          { emoji: '😬', text: 'Sabor a piscina / desinfectante', correct: true },
+          { emoji: '😮', text: 'Sabor amargo', correct: false },
+        ],
+        feedbackOk:   { title: 'Exactamente!', text: 'Cloro em excesso dá sabor e cheiro a piscina. Um nível muito alto pode irritar o sistema digestivo.' },
+        feedbackErro: { title: 'Não exactamente!', text: 'O cloro em excesso produz sabor a piscina. Sabor metálico pode indicar ferro ou outros metais nas canalizações.' }
+      },
+      {
+        prog: 100, question: 'Água com sabor salgado pode indicar:',
+        hint: 'Pensa nos minerais que podem contaminar a água...', emoji: '🧂',
+        opcoes: [
+          { emoji: '🌊', text: 'Contaminação por água salgada ou excesso de sódio', correct: true },
+          { emoji: '🌿', text: 'Presença de algas', correct: false },
+          { emoji: '🔩', text: 'Canalização muito antiga', correct: false },
+        ],
+        feedbackOk:   { title: 'Muito bem!', text: 'Sabor salgado indica excesso de sódio ou intrusão de água do mar em zonas costeiras. Usa o SIDQA para análise completa.' },
+        feedbackErro: { title: 'Não desta vez!', text: 'Sabor salgado indica excesso de sódio ou cloretos, podendo significar intrusão de água do mar em zonas costeiras.' }
+      }
+    ]
+  },
+  {
+    id: 'licao_avaliacao',
+    num: 5,
+    titulo: 'Avaliação Completa',
+    meta: 'Integra todos os parâmetros aprendidos',
+    xp: 50,
+    emoji: '🏆',
+    bloqueada: true,
+    steps: [
+      {
+        prog: 25, question: 'Qual dos seguintes NÃO é um parâmetro organoléptico?',
+        hint: 'Organoléptico = detectado pelos sentidos...', emoji: '🔬',
+        opcoes: [
+          { emoji: '🎨', text: 'Cor', correct: false },
+          { emoji: '🌡️', text: 'Temperatura', correct: true },
+          { emoji: '👃', text: 'Cheiro', correct: false },
+        ],
+        feedbackOk:   { title: 'Correcto!', text: 'Temperatura não é um parâmetro organoléptico clássico. Os parâmetros organolépticos avaliados pelo SIDQA são cor, turbidez, cheiro e presença de partículas visíveis.' },
+        feedbackErro: { title: 'Revê os módulos!', text: 'Cor, turbidez, cheiro e sabor são os parâmetros organolépticos — detectados pelos sentidos. Temperatura é um parâmetro físico diferente.' }
+      },
+      {
+        prog: 50, question: 'Encontras água amarelada, sem cheiro e transparente. O que fazes?',
+        hint: 'Analisa cada parâmetro separadamente...', emoji: '🟡',
+        opcoes: [
+          { emoji: '✅', text: 'Não consumir — a cor alterada é suficiente para alerta', correct: true },
+          { emoji: '💧', text: 'Beber — sem cheiro está segura', correct: false },
+          { emoji: '⏳', text: 'Esperar que a cor mude', correct: false },
+        ],
+        feedbackOk:   { title: 'Excelente raciocínio!', text: 'Correcto! Qualquer parâmetro alterado é suficiente para não consumir. Cor amarelada indica ferro ou manganês, mesmo sem cheiro detectável.' },
+        feedbackErro: { title: 'Atenção!', text: 'Mesmo sem cheiro, a cor alterada é um sinal de alerta suficiente. Nunca consumas água com cor anormal sem análise prévia.' }
+      },
+      {
+        prog: 75, question: 'Qual é o papel do SIDQA quando detectas anomalias?',
+        hint: 'O SIDQA transforma observações em...', emoji: '📊',
+        opcoes: [
+          { emoji: '🔧', text: 'Tratar a água directamente', correct: false },
+          { emoji: '📋', text: 'Transformar as observações num relatório técnico de diagnóstico', correct: true },
+          { emoji: '💰', text: 'Vender equipamento de filtragem', correct: false },
+        ],
+        feedbackOk:   { title: 'Perfeito!', text: 'O SIDQA transforma as tuas observações organolépticas num relatório técnico que orienta decisões — sobre consumo, tratamento e monitorização.' },
+        feedbackErro: { title: 'Não exactamente!', text: 'O SIDQA é um sistema de diagnóstico — avalia os teus dados e produz um relatório técnico para orientar decisões sobre a água.' }
+      },
+      {
+        prog: 100, question: 'Qual é a sequência correcta de avaliação organoléptica?',
+        hint: 'Segurança primeiro — nunca começas pelo sabor!', emoji: '🧪',
+        opcoes: [
+          { emoji: '👅', text: 'Sabor → Cor → Cheiro → Turbidez', correct: false },
+          { emoji: '✅', text: 'Cor → Turbidez → Partículas → Cheiro → Sabor (se seguro)', correct: true },
+          { emoji: '👃', text: 'Cheiro → Sabor → Cor → Turbidez', correct: false },
+        ],
+        feedbackOk:   { title: '🏆 Especialista!', text: 'Sequência correcta! Começa sempre pelo visual (cor, turbidez, partículas), depois o cheiro, e só avalias o sabor se todos os anteriores forem normais.' },
+        feedbackErro: { title: 'Quase!', text: 'A sequência segura é sempre: visual primeiro (cor, turbidez, partículas), depois cheiro, e só o sabor por último se tudo estiver normal.' }
+      }
+    ]
+  }
+];
+
+// ================================================
+// RENDERIZAR LISTA DE LIÇÕES DINAMICAMENTE
+// ================================================
+
+function renderListaLicoes() {
+  const lista = document.getElementById('listaLicoes');
+  if (!lista) return;
+
+  const feitas  = getLicoesFeitas();
+  const todasL1a4 = ['licao_cor','licao_turbidez','licao_cheiro','licao_sabor'].every(id => feitas.includes(id));
+
+  lista.innerHTML = LICOES_DEF.map((l, i) => {
+    const feita    = feitas.includes(l.id);
+    const bloqueada = l.id === 'licao_avaliacao' && !todasL1a4;
+    const activa   = !feita && !bloqueada;
+
+    let numClass = bloqueada ? 'lock-num' : feita ? 'done-num' : 'active-num';
+    let numText  = bloqueada ? '🔒' : feita ? '✓' : l.num;
+    let itemClass = 'licao-item' + (feita ? ' done' : '') + (bloqueada ? ' locked' : '');
+    let extraStyle = activa ? 'border-color:rgba(0,201,224,0.4)' : '';
+    let onclick    = bloqueada ? '' : `onclick="iniciarLicao(${i})"`;
+
+    return `
+      <div class="${itemClass}" ${onclick} style="${extraStyle}">
+        <div class="licao-num ${numClass}">${numText}</div>
+        <div class="licao-info">
+          <div class="licao-title">${l.emoji} ${l.titulo}</div>
+          <div class="licao-meta">${l.meta}${bloqueada ? ' — Completa as 4 lições anteriores' : ''}</div>
+        </div>
+        <div class="licao-xp">+${l.xp} XP</div>
+      </div>`;
+  }).join('');
+}
+
+// ================================================
+// SISTEMA DE LIÇÃO INDIVIDUAL
+// ================================================
+
+let licaoActual    = null;
+let currentStep    = 0;
+let answered       = false;
+let xpGanhoNaLicao = 0;
+
+function iniciarLicao(idx) {
+  licaoActual    = LICOES_DEF[idx];
+  currentStep    = 0;
+  answered       = false;
+  xpGanhoNaLicao = 0;
+
+  const navTitle = document.getElementById('licaoNavTitle');
+  if (navTitle) navTitle.textContent = 'Lição ' + licaoActual.num + ' · ' + licaoActual.titulo;
+
+  goTo('licao');
+}
+
+function initLicao() {
+  if (licaoActual) renderStep();
+}
+
+function renderStep() {
+  if (!licaoActual) return;
+  const s = licaoActual.steps[currentStep];
+  document.getElementById('licaoBar').style.width = '0%';
+
+  document.getElementById('stepContainer').innerHTML = `
+    <div class="step-counter">PERGUNTA ${currentStep + 1} DE ${licaoActual.steps.length}</div>
+    <div class="step-emoji-big">${s.emoji}</div>
+    <div class="step-question">${s.question}</div>
+    <div class="step-hint">${s.hint}</div>
+    <div class="opcoes" id="opcoes">
+      ${s.opcoes.map((o, i) => `
+        <div class="opcao" onclick="selectOpcao(${i})" id="op${i}">
+          <span class="opcao-emoji">${o.emoji}</span>
+          <span class="opcao-text">${o.text}</span>
+        </div>`).join('')}
+    </div>
+    <div class="feedback-box" id="feedback">
+      <span class="feedback-icon" id="fbIcon"></span>
+      <div class="feedback-text"><strong id="fbTitle"></strong><span id="fbText"></span></div>
+    </div>
+    <button class="btn-next" id="btnNext" onclick="nextStep()">
+      ${currentStep < licaoActual.steps.length - 1 ? 'Próxima Pergunta →' : 'Ver Resultado! 🏆'}
+    </button>`;
+
+  setTimeout(() => { document.getElementById('licaoBar').style.width = s.prog + '%'; }, 100);
+}
+
+function selectOpcao(idx) {
+  if (answered) return;
+  answered = true;
+
+  const s         = licaoActual.steps[currentStep];
+  const isCorrect = s.opcoes[idx].correct;
+  const op        = document.getElementById(`op${idx}`);
+  op.classList.add(isCorrect ? 'selected' : 'wrong');
+
+  if (!isCorrect)
+    s.opcoes.forEach((o, i) => { if (o.correct) document.getElementById(`op${i}`).classList.add('selected'); });
+
+  const fb   = document.getElementById('feedback');
+  const data = isCorrect ? s.feedbackOk : s.feedbackErro;
+  fb.className = 'feedback-box show ' + (isCorrect ? 'correct' : 'incorrect');
+  document.getElementById('fbIcon').textContent  = isCorrect ? '✅' : '❌';
+  document.getElementById('fbTitle').textContent = data.title;
+  document.getElementById('fbText').textContent  = data.text;
+  document.getElementById('btnNext').classList.add('show');
+
+  if (isCorrect) {
+    const isUltimaStep = currentStep === licaoActual.steps.length - 1;
+    const isNovaLicao  = isUltimaStep ? marcarLicao(licaoActual.id) : false;
+
+    if (!isUltimaStep) {
+      // XP parcial por resposta correcta (não conta na última — conta só ao completar)
+      showToast('✨ Correcto! Continua assim!');
+    } else if (isNovaLicao) {
+      addXP(licaoActual.xp);
+      xpGanhoNaLicao += licaoActual.xp;
+      showToast('🏆 +' + licaoActual.xp + ' XP — Lição completa!');
+      updateAllXP();
+    } else {
+      showToast('✅ Correcto! (Lição já concluída)');
+    }
+  }
+}
+
+function nextStep() {
+  currentStep++;
+  answered = false;
+  if (currentStep >= licaoActual.steps.length) {
+    const xpEl = document.getElementById('resultadoXP');
+    if (xpEl) xpEl.textContent = xpGanhoNaLicao > 0 ? '+' + xpGanhoNaLicao + ' XP' : 'Revisto!';
+    const tituloEl = document.getElementById('resultadoTitulo');
+    if (tituloEl) tituloEl.textContent = licaoActual.titulo + ' — Concluído!';
+    goTo('resultado');
+  } else {
+    renderStep();
+  }
+}
+
+// ================================================
+// NAVEGAÇÃO
+// ================================================
+
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+
+  if (id === 'licao') initLicao();
+
+  if (id === 'aprender' && !getAprenderLido()) {
+    localStorage.setItem('maf_aprender', '1');
+    addXP(XP_APRENDER);
+    showToast('📖 +' + XP_APRENDER + ' XP — Parâmetros explorados!');
+  }
+  if (id === 'ambiente' && !getAmbienteLido()) {
+    localStorage.setItem('maf_ambiente', '1');
+    addXP(XP_AMBIENTE);
+    showToast('🌍 +' + XP_AMBIENTE + ' XP — Ambiente explorado!');
+  }
+  updateAllXP();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function resetXP() {
+  localStorage.removeItem('maf_xp');
+  localStorage.removeItem('maf_licoes');
+  localStorage.removeItem('maf_aprender');
+  localStorage.removeItem('maf_ambiente');
+  updateAllXP();
+  showToast('🔄 XP reiniciado!');
+}
+
+// ---- INIT ----
+document.addEventListener('DOMContentLoaded', () => {
+  updateAllXP();
+});
+</script>
+</body>
+</html>
