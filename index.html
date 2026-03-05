@@ -256,41 +256,6 @@
   .badge-emoji { font-size: 28px; margin-bottom: 6px; }
   .badge-name { font-size: 11px; color: var(--cinza); font-weight: 500; }
 
-  /* ---- MAPA SCREEN ---- */
-  #mapa { background: var(--fundo); }
-  .mapa-container { flex: 1; padding: 20px 24px; }
-  .mapa-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px; text-align: center; }
-  .stat-num { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--ciano); }
-  .stat-label { font-size: 11px; color: var(--cinza); margin-top: 2px; }
-
-  .mapa-visual {
-    background: linear-gradient(180deg, #0A3D5C 0%, #072233 100%);
-    border: 1px solid var(--border); border-radius: 20px; overflow: hidden;
-    height: 260px; position: relative; margin-bottom: 20px;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .mapa-placeholder { font-size: 13px; color: var(--cinza); text-align: center; z-index: 2; }
-  .mapa-placeholder .map-icon { font-size: 48px; margin-bottom: 12px; }
-  .mapa-dot { position: absolute; border-radius: 50%; animation: ping 2s ease-in-out infinite; }
-  .mapa-dot.d1 { width: 12px; height: 12px; background: var(--verde); top: 40%; left: 35%; box-shadow: 0 0 12px var(--verde); }
-  .mapa-dot.d2 { width: 10px; height: 10px; background: var(--ciano); top: 55%; left: 60%; box-shadow: 0 0 10px var(--ciano); animation-delay: 0.7s; }
-  .mapa-dot.d3 { width: 8px; height: 8px; background: var(--amarelo); top: 30%; left: 55%; box-shadow: 0 0 8px var(--amarelo); animation-delay: 1.4s; }
-  .mapa-dot.d4 { width: 14px; height: 14px; background: var(--laranja); top: 65%; left: 30%; box-shadow: 0 0 14px var(--laranja); animation-delay: 0.3s; }
-  @keyframes ping { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.6);opacity:0.6} }
-
-  .mapa-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
-  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--cinza); }
-  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
-
-  .registos-recentes h3 { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 12px; }
-  .registo-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 8px; }
-  .registo-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-  .registo-info { flex: 1; }
-  .registo-local { font-size: 13px; font-weight: 500; }
-  .registo-detalhe { font-size: 11px; color: var(--cinza); }
-  .registo-time { font-size: 11px; color: var(--cinza); }
-
   /* ---- PERFIL SCREEN ---- */
   #perfil { background: var(--fundo); }
   .perfil-hero { background: linear-gradient(180deg, #0A4F7A 0%, var(--fundo) 100%); padding: 32px 24px 40px; text-align: center; }
